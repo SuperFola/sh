@@ -114,7 +114,7 @@ def main():
                 print("[!] Need more arguments. ex: search index keywords..")
             # other
         else:
-            print("'{}': Unrecognised command".format(cmd))
+            os.system(cmd + " " + " ".join(args))
 
 
 if __name__ == '__main__':
