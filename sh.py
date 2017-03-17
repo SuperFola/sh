@@ -38,6 +38,13 @@ def template_out(template, lst_texts):
     return "\n".join("".join(i) for i in out)
 
 
+def chdir(ndir):
+    try:
+        os.chdir(ndir)
+    except FileNotFoundError:
+        print("Can not find directory {}".format(os.path.join(os.getcwd(), ndir)))
+
+
 def main():
     shells = {"": os.getcwd()}
     wd = os.getcwd()
@@ -58,12 +65,13 @@ def main():
         if cmd[0] == "!":
             # we are using an environment
             cmd = cmd[1:]
-            os.chdir(shells[cmd])
+            chdir(shells[cmd])
             # executing the command
             if args:
                 if args[0] == "cd":
                     if args[1:]:
                         shells[cmd] = os.path.join(shells[cmd], args[1])
+                        chdir(shells[cmd])
                     else:
                         print(shells[cmd])
                 else:
