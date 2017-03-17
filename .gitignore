@@ -1,0 +1,10 @@
+# python
+__pycache__/*
+*.pyo
+*.pyc
+
+# project
+.shells
+indexes/*
+*.part
+*.index
