@@ -13,6 +13,7 @@ environment related
     saveenv            => saves all the environments in the .shells file
 
 shell related
+    rm (files)         => remove files
     quit               => quits the shell nicely
     help               => displays this message
     show index|env     => show all the indexes or environments available
@@ -81,11 +82,27 @@ def main():
             if len(args) <= 1:
                 print("[!] Need more arguments. ex: newenv name path")
             else:
-                shells[args[0]] = os.path.join(os.getcwd(), args[1])
+                try:
+                    os.chdir(os.path.join(os.getcwd(), args[1]))
+                except FileNotFoundError:
+                    try:
+                        os.chdir(args[1])
+                    except FileNotFoundError:
+                        print("[!] Could not create environment, invalid path")
+                    else:
+                        shells[args[0]] = os.getcwd()
+                else:
+                    shells[args[0]] = os.getcwd()
         elif cmd == "saveenv":
             print("Saving all the environments (counted {})".format(len(shells)))
-            pickle.Pickler(open(".shells", "wb")).dump(shells)
+            pickle.Pickler(open(os.path.join(wd, ".shells"), "wb")).dump(shells)
         # shell related
+        elif cmd == "rm":
+            if args:
+                for e in args:
+                    os.remove(e)
+            else:
+                print("[!] Need more arguments. ex: rm (files)")
         elif cmd == "quit":
             print("Goodbye !")
             break
