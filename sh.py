@@ -13,6 +13,9 @@ environment related
     saveenv            => saves all the environments in the .shells file
 
 shell related
+    newmacro name (..) => create a new macro named name with the code given
+                          (batch/bash depending on your OS)
+    savemacro          => save all the macros
     rm (files)         => remove files
     quit               => quits the shell nicely
     help               => displays this message
@@ -48,16 +51,16 @@ def chdir(ndir):
 
 def main():
     shells = {"": os.getcwd()}
+    macros = {}
     wd = os.getcwd()
     
     # on start-up
     if os.path.exists(".shells"):
         # loading the shells
-        answ = input("Found saved shells. Do you want to load them [y/n] ? ")
-        while answ.lower() not in ('y', 'n'):
-            answ = input("[!] Incorrect input. Found saved shells. Do you want to load them [y/n] ? ")
-        if answ.lower() == "y":
-            shells = pickle.Unpickler(open(".shells", "rb")).load()
+        shells = pickle.Unpickler(open(".shells", "rb")).load()
+    if os.path.exists(".macros"):
+        # loading the macros
+        macros = pickle.Unpickler(open(".macros", "rb")).load()
     
     while True:
         cmd, *args = input(os.getcwd() + "$ ").split(" ")
@@ -66,17 +69,35 @@ def main():
         if cmd[0] == "!":
             # we are using an environment
             cmd = cmd[1:]
-            chdir(shells[cmd])
-            # executing the command
-            if args:
-                if args[0] == "cd":
-                    if args[1:]:
-                        shells[cmd] = os.path.join(shells[cmd], args[1])
-                        chdir(shells[cmd])
+            if cmd in shells:
+                chdir(shells[cmd])
+                # executing the command
+                if args:
+                    if args[0] == "cd":
+                        if args[1:]:
+                            shells[cmd] = os.path.join(shells[cmd], args[1])
+                            chdir(shells[cmd])
+                        else:
+                            print(shells[cmd])
+                    # handling macros
+                    elif args[0][0] == ":":
+                        macro = args[0][1:]
+                        if macro in macros.keys():
+                            os.system(macros[macro] + " " + " ".join(args[1:]))
+                        else:
+                            print("[!] {} is not an existing macro".format(macro))
                     else:
-                        print(shells[cmd])
-                else:
-                    os.system(" ".join(args))
+                        os.system(" ".join(args))
+            else:
+                print("[!] {} is not an existing environment".format(cmd))
+        # managing macros related commands
+        elif cmd[0] == ":":
+            # we are using a macro
+            cmd = cmd[1:]
+            if cmd in macros.keys():
+                os.system(macros[cmd] + " " + " ".join(args))
+            else:
+                print("[!] {} is not an existing macro".format(macro))
         # env related
         elif cmd == "newenv":
             if len(args) <= 1:
@@ -97,6 +118,15 @@ def main():
             print("Saving all the environments (counted {})".format(len(shells)))
             pickle.Pickler(open(os.path.join(wd, ".shells"), "wb")).dump(shells)
         # shell related
+        elif cmd == "newmacro":
+            if len(args) > 1:
+                macros[args[0]] = " ".join(args[1:])
+                print(macros)
+            else:
+                print("[!] Need more arguments. ex: newmacro name code")
+        elif cmd == "savemacro":
+            print("Saving all the macros (counted {})".format(len(macros)))
+            pickle.Pickler(open(os.path.join(wd, ".macros"), "wb")).dump(macros)
         elif cmd == "rm":
             if args:
                 for e in args:
