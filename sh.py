@@ -5,6 +5,7 @@ import sys
 import glob
 import pickle
 import shutil
+import fnmatch
 
 import sh_ftp
 import sh_index
@@ -28,6 +29,10 @@ shell related
     help               => displays this message
     show type          => display the content of type
                           type can be : 'index', 'env', 'macro'
+    ls dir [type] [x]  => list all the files/folders in dir, matching type,
+                          with a depth of x. type is a pattern for the files to match.
+                          If not specified, type=*. If not specified, (x=)0.
+                          (x=)-1 will list all the files in all subdirs.
 
 ftp related
     ftp                => starts a ftp shell inside the shell
@@ -188,6 +193,46 @@ def parse_cmds_show(cmd, args, shells, macros, pymacros, wd):
         print("[!] Need more arguments. ex: show index|env|macro")
 
 
+def parse_cmds_ls(cmd, args, shells, macros, pymacros, wd):
+    def recursive_glob(treeroot, pattern, depth=0):
+        results = []
+        if depth == -1:
+            for base, dirs, files in os.walk(treeroot):
+                goodfiles = fnmatch.filter(files, pattern)
+                results.extend(os.path.join(base, f) for f in goodfiles)
+        else:
+            for file in glob.glob(os.path.join(treeroot, pattern)):
+                if os.path.isdir(file):
+                    results.append(file)
+                    if depth >= 1:
+                        results.extend(f for f in recursive_glob(file, pattern, depth - 1))
+                else:
+                    results.append(file)
+        return results
+    
+    if not args:
+        print("[!] Need more arguments. ex: ls dir [x]")
+    else:
+        dir = args.pop(0)
+        x = 0
+        ftype = "*"
+        if args:
+            ftype = args.pop(0)
+            try:
+                x = args.pop(0)
+            except IndexError:
+                if ftype.isdigit() or (ftype[0] == "-" and ftype[1:].isdigit()):
+                    x = int(ftype)
+                    ftype = "*"
+            else:
+                try:
+                    x = int(x)
+                except ValueError:
+                    print("[!] Given depth is not correct")
+        for line in recursive_glob(dir, ftype, x):
+            print(line)
+
+
 def parse_commands(cmd, args, shells, macros, pymacros, wd):
     # managing environment related commands
     if cmd[0] == "!":
@@ -203,6 +248,8 @@ def parse_commands(cmd, args, shells, macros, pymacros, wd):
         parse_cmds_new(cmd, args, shells, macros, pymacros, wd)
     elif cmd == "save":
         parse_cmds_save(cmd, args, shells, macros, pymacros, wd)
+    elif cmd == "ls":
+        parse_cmds_ls(cmd, args, shells, macros, pymacros, wd)
     # shell related
     elif cmd == "cd":
         if len(args):
