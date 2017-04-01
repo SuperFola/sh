@@ -1,3 +1,4 @@
+#coding: utf-8
 import os
 import glob
 import pickle
@@ -12,7 +13,7 @@ def index_all(path, ftype, wd):
         nonlocal index
         for file in glob.glob(os.path.join(p, ftype)):
             print(file, flush=True)
-            index[file] = open(file).read()
+            index[file] = open(file, encoding='utf-8').read()
         for np in glob.glob(os.path.join(p, "*")):
             _index(np, ftype)
     _index(path, ftype)
