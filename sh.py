@@ -159,7 +159,6 @@ def parse_cmds_new(cmd, args, shells, macros, pymacros, wd):
                 shells[args[0]] = os.getcwd()
         elif t == "macro":
             macros[args[0]] = " ".join(args[1:])
-            print(macros)
         else:
             print("[!] Can not create new '{}' because it is not recognized".format(t))
 
