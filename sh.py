@@ -28,7 +28,7 @@ shell related
     quit               => quits the shell nicely
     help               => displays this message
     show type          => display the content of type
-                          type can be : 'index', 'env', 'macro'
+                          type can be : 'indexes', 'env', 'macros', 'macro' [x]
     ls dir [type] [x]  => list all the files/folders in dir, matching type,
                           with a depth of x. type is a pattern for the files to match.
                           If not specified, type=*. If not specified, (x=)0.
@@ -180,16 +180,21 @@ def parse_cmds_save(cmd, args, shells, macros, pymacros, wd):
 
 def parse_cmds_show(cmd, args, shells, macros, pymacros, wd):
     if args:
-        if args[0] == "index":
+        if args[0] == "indexes":
             print(template_out("{:20}  ", [os.path.basename(file)[:-6] for file in glob.glob("indexes/*.index")]))
         elif args[0] == "env":
             print(template_out("{:20}  ", sorted(shells.keys())))
-        elif args[0] == "macro":
+        elif args[0] == "macros":
             print(template_out("{:20}  ", sorted(macros.keys())))
+        elif args[0] == "macro":
+            if args[1:] and macros.get(args[1]):
+                print("Macro '{}' => {} [...]".format(args[0], macros.get(args[1])))
+            else:
+                print("[!] '{}' is not an existing macro".format(args[0]))
         else:
             print("Can not get what '{}' stands for".format(args[0]))
     else:
-        print("[!] Need more arguments. ex: show index|env|macro")
+        print("[!] Need more arguments. ex: show indexes|env|macros|macro [x]")
 
 
 def parse_cmds_ls(cmd, args, shells, macros, pymacros, wd):
